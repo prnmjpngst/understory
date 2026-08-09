@@ -1,5 +1,11 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -22,6 +28,7 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
 }
 
@@ -36,6 +43,7 @@ export function Button({
   disabled = false,
   loading = false,
   fullWidth = false,
+  style,
   accessibilityLabel,
 }: ButtonProps) {
   const theme = useTheme();
@@ -93,6 +101,7 @@ export function Button({
           justifyContent: 'center',
           flexDirection: 'row',
         },
+        style,
       ]}>
       {loading ? (
         <ActivityIndicator color={p.fg} size="small" />

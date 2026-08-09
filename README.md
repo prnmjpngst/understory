@@ -82,6 +82,30 @@ You've successfully run and modified your React Native App. :partying_face:
 - If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
 - If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
 
+# Production Android builds (GitHub Actions)
+
+Android production builds run entirely on GitHub Actions — no local SDK required.
+The workflow `.github/workflows/android-release.yml` runs on every push to `main`
+and on tag push (`v*`), and uploads the release APK + AAB as workflow artifacts.
+Tags also create a GitHub Release with the artifacts attached.
+
+## Signing
+
+To sign releases with your own keystore (instead of the debug one):
+
+1. Generate a keystore once:
+   ```sh
+   keytool -genkey -v -keystore release.keystore -alias upload -keyalg RSA -keysize 2048 -validity 10000
+   ```
+2. Register repo secrets (Settings → Secrets and variables → Actions):
+   - `ANDROID_KEYSTORE` — content of `release.keystore` as base64: `base64 < release.keystore`
+   - `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
+3. Push to `main`; the APK will be signed with your keystore.
+
+Without those secrets, the workflow still runs and the release APK is signed with
+the debug keystore (installable, but not for public distribution). `release.keystore`
+and `android/keystore.properties` are git-ignored and never committed.
+
 # Troubleshooting
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.

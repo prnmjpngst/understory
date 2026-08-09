@@ -33,7 +33,7 @@ export function ListItem({
   accessibilityLabel,
 }: ListItemProps) {
   const theme = useTheme();
-  const { colors, spacing, layout } = theme;
+  const { colors, spacing } = theme;
 
   return (
     <Pressable

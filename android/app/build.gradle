@@ -72,6 +72,25 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+/**
+ * Konfigurasi penandatanganan rilis.
+ *
+ * Keystore produksi DIBACA dari android/keystore.properties — file itu TIDAK
+ * di-commit (lihat .gitignore) dan hanya dibuat oleh CI GitHub Actions dari
+ * rahasia repository. Jika file tidak ada (mis. build lokal untuk pengujian),
+ * rilis ditandatangani dengan debug keystore agar APK tetap terpasang.
+ */
+final Properties releaseSigning = new Properties()
+def releaseKeystore = rootProject.file('keystore.properties')
+def hasReleaseSigning = releaseKeystore.exists()
+if (hasReleaseSigning) {
+    releaseSigning.load(new FileInputStream(releaseKeystore))
+    hasReleaseSigning = releaseSigning.getProperty('storeFile') != null &&
+        releaseSigning.getProperty('storePassword') != null &&
+        releaseSigning.getProperty('keyAlias') != null &&
+        releaseSigning.getProperty('keyPassword') != null
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -92,15 +111,22 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(releaseSigning.getProperty('storeFile'))
+                storePassword releaseSigning.getProperty('storePassword')
+                keyAlias releaseSigning.getProperty('keyAlias')
+                keyPassword releaseSigning.getProperty('keyPassword')
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Di CI, rilis memakai keystore produksi dari rahasia repo.
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
