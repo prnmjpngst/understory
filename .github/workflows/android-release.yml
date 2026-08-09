@@ -31,6 +31,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Runner image uses ~10GB before we start; a 4-ABI RN release build needs
+      # far more. Free space from preinstalled tooling (keep Android SDK + node
+      # tool cache). android:false keeps the SDK; tool-cache:true re-downloads node.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -82,7 +96,9 @@ jobs:
       - name: Build release artifacts
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          ./gradlew assembleRelease bundleRelease
+          # Rilis hanya untuk ARM (perangkat nyata); x86/x86_64 dipakai emulator lokal.
+          ./gradlew assembleRelease bundleRelease \
+            -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
         working-directory: android
 
       - name: Show outputs
