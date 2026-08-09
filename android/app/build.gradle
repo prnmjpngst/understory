@@ -79,7 +79,7 @@ android {
 
     namespace "com.understory"
     defaultConfig {
-        applicationId "com.understory"
+        applicationId "app.understory.notes"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

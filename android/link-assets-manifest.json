@@ -1,0 +1,41 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Inter-Bold.ttf",
+      "sha1": "25e6c05229f237cfbcd943591a91e44dc72a831f"
+    },
+    {
+      "path": "assets/fonts/Inter-Medium.ttf",
+      "sha1": "e90bd5d67bd4a0bce77baf0089566c63089247bf"
+    },
+    {
+      "path": "assets/fonts/Inter-Regular.ttf",
+      "sha1": "d87fa6b6fd6dbecd356e52e63dbb08c0e9bc3a8a"
+    },
+    {
+      "path": "assets/fonts/Inter-SemiBold.ttf",
+      "sha1": "3a3c592c8a4bf72f4db853cea6eacbdb83886d1f"
+    },
+    {
+      "path": "assets/fonts/Lora-Bold.ttf",
+      "sha1": "0c6b62d715eaf71e7acffb65ba368569267c4a38"
+    },
+    {
+      "path": "assets/fonts/Lora-Italic.ttf",
+      "sha1": "e353a0bac18e8f939ea4990f3e539d7f6acb843f"
+    },
+    {
+      "path": "assets/fonts/Lora-Medium.ttf",
+      "sha1": "4615086f956c757e6f78aca1a592732e0169abbe"
+    },
+    {
+      "path": "assets/fonts/Lora-Regular.ttf",
+      "sha1": "8852b53f3452b1b7f4e4d9ffe6af377f29525e79"
+    },
+    {
+      "path": "assets/fonts/Lora-SemiBold.ttf",
+      "sha1": "d8b70df4d0e3b2dea1640b49e2b2bf00ec072ff2"
+    }
+  ]
+}
