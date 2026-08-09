@@ -4,6 +4,7 @@ import { Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { renameDocument, updateDocumentContent } from '../db/documents';
+import { enqueueEmbedding } from '../ai/embedding';
 import type { RootStackParamList } from '../navigation/types';
 import { useDocumentRow, useDocumentsStore } from '../store/documentsStore';
 import { useTheme } from '../theme';
@@ -48,6 +49,8 @@ export function EditorScreen({ navigation, route }: Props) {
         }
         await updateDocumentContent(docId, next.content);
         await refresh();
+        // Embedding berjalan di latar; bila model belum siap, dilewati.
+        enqueueEmbedding(docId);
       } finally {
         setSaving(false);
         setDirty(false);
@@ -83,6 +86,7 @@ export function EditorScreen({ navigation, route }: Props) {
             .then(() => refresh())
             .catch(() => {});
         }
+        enqueueEmbedding(docId);
       }
     };
   }, [docId, refresh]);

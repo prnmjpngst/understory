@@ -5,7 +5,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { createDocument } from '../db/documents';
+import { enqueueEmbedding } from '../ai/embedding';
+import {
+  createDocument,
+  getDocument,
+  updateDocumentContent,
+  type DocumentRow,
+} from '../db/documents';
 import {
   addInboxItem,
   deleteInboxItem,
@@ -16,7 +22,7 @@ import {
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
 import { useDocumentsStore } from '../store/documentsStore';
 import { useTheme } from '../theme';
-import { Button, EmptyState, Icon, Input, ListItem, Text } from '../ui';
+import { Button, EmptyState, Icon, Input, ListItem, Sheet, Text } from '../ui';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Inbox'>,
@@ -32,6 +38,7 @@ export function InboxScreen({ navigation }: Props) {
   const [items, setItems] = useState<InboxItem[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
+  const [appendTarget, setAppendTarget] = useState<InboxItem | null>(null);
 
   const load = useCallback(async () => {
     const all = await listInboxItems('pending');
@@ -65,6 +72,22 @@ export function InboxScreen({ navigation }: Props) {
     await refresh();
     await load();
     navigation.navigate('Editor', { docId });
+  };
+
+  // Tempel isi item ke catatan yang dipilih, lalu arsipkan item.
+  const appendToNote = async (item: InboxItem, docId: number) => {
+    const doc = await getDocument(docId);
+    if (!doc) {
+      return;
+    }
+    const separator = doc.content_markdown.trim().length > 0 ? '\n\n' : '';
+    const appended = `${doc.content_markdown}${separator}${item.content.trim()}\n`;
+    await updateDocumentContent(docId, appended);
+    await markInboxArchived(item.id, docId, 'append_to_existing');
+    enqueueEmbedding(docId);
+    setAppendTarget(null);
+    await refresh();
+    await load();
   };
 
   const removeItem = async (id: number) => {
@@ -134,19 +157,87 @@ export function InboxScreen({ navigation }: Props) {
                   </View>
                 }
               />
-              <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.sm }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: spacing.sm,
+                  paddingHorizontal: spacing.lg,
+                  paddingBottom: spacing.sm,
+                }}>
                 <Button
                   title="Turn into note"
                   size="sm"
                   variant="ghost"
                   icon="file-plus-2"
                   onPress={() => convertToNote(item)}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  title="Append to note"
+                  size="sm"
+                  variant="ghost"
+                  icon="corner-down-right"
+                  onPress={() => setAppendTarget(item)}
+                  style={{ flex: 1 }}
                 />
               </View>
             </View>
           )}
         />
       )}
+
+      <AppendSheet
+        item={appendTarget}
+        onClose={() => setAppendTarget(null)}
+        onPick={(docId) => {
+          if (appendTarget) {
+            appendToNote(appendTarget, docId);
+          }
+        }}
+      />
     </View>
+  );
+}
+
+// Lembar pemilih catatan tujuan untuk "append to existing".
+function AppendSheet({
+  item,
+  onClose,
+  onPick,
+}: {
+  item: InboxItem | null;
+  onClose: () => void;
+  onPick: (docId: number) => void;
+}) {
+  const theme = useTheme();
+  const { spacing } = theme;
+  const rows = useDocumentsStore((s) => s.rows);
+  const candidates = rows.filter((r) => r.id !== item?.result_doc_id);
+
+  return (
+    <Sheet
+      visible={item !== null}
+      onClose={onClose}
+      title="Append to note">
+      {candidates.length === 0 ? (
+        <Text variant="callout" color="textSecondary">
+          No notes yet. Create a note first, then come back here.
+        </Text>
+      ) : (
+        <FlatList
+          data={candidates}
+          keyExtractor={(r: DocumentRow) => String(r.id)}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item: doc }) => (
+            <ListItem
+              title={doc.title || 'Untitled'}
+              leftIcon="file-text"
+              onPress={() => onPick(doc.id)}
+              style={{ marginHorizontal: -spacing.lg }}
+            />
+          )}
+        />
+      )}
+    </Sheet>
   );
 }
